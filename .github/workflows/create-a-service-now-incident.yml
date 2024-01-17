@@ -103,7 +103,7 @@ jobs:
               "assignedTo": "${{ fromJson(steps.servicenow_incident.outputs.response).result.assigned_to.link }}",
               "urgency": "${{ fromJson(steps.servicenow_incident.outputs.response).result.urgency }}",
               "contactType": "${{ fromJson(steps.servicenow_incident.outputs.response).result.contact_type }}",
-              "createdOn": "${{ needs.format-date.outputs.formatted_date }}",
+              "createdOn": "${{ steps.format_date.outputs.formatted_date }}",
               "createdBy": "${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_by }}",
               "isActive": "${{ fromJson(steps.servicenow_incident.outputs.response).result.active }}",
               "priority": "${{ fromJson(steps.servicenow_incident.outputs.response).result.priority }}"
