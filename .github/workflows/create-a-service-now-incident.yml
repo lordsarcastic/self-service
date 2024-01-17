@@ -41,6 +41,10 @@ jobs:
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_payload).context.runId}}
           logMessage: Starting request to create ServiceNow incident
+      
+      - name: Visualize request
+        run: |
+          echo '{"short_description": "${{ inputs.short_description }}"", "assigned_to": "${{ inputs.assigned_to }}", "urgency": "${{ inputs.urgency }}", "sysparm_display_value": "${{ inputs.sysparm_display_value }}", "sysparm_input_display_value": "${{ inputs.sysparm_input_display_value }}"}'
 
       - name: Create a ServiceNow incident
         id: servicenow_incident
@@ -82,16 +86,16 @@ jobs:
           blueprint: servicenowIncident
           properties: |-
             {
-              "category": ${{ steps.servicenow_incident.outputs.body.result.category }},
-              "reopenCount": ${{ steps.servicenow_incident.outputs.body.result.reopen_count }},
-              "severity": ${{ steps.servicenow_incident.outputs.body.result.severity }},
-              "assignedTo": ${{ steps.servicenow_incident.outputs.body.result.assigned_to.link }},
-              "urgency": ${{ steps.servicenow_incident.outputs.body.result.urgency }},
-              "contactType": ${{ steps.servicenow_incident.outputs.body.result.contact_type }},
-              "createdOn": ${{ steps.servicenow_incident.outputs.body.result.sys_created_on }},
-              "createdBy": ${{ steps.servicenow_incident.outputs.body.result.sys_created_by }},
-              "isActive": ${{ steps.servicenow_incident.outputs.body.result.active }},
-              "priority": ${{ steps.servicenow_incident.outputs.body.result.priority }}
+              "category": ${{ fromJson(steps.servicenow_incident.outputs.response).result.category }},
+              "reopenCount": ${{ fromJson(steps.servicenow_incident.outputs.response).result.reopen_count }},
+              "severity": ${{ fromJson(steps.servicenow_incident.outputs.response).result.severity }},
+              "assignedTo": ${{ fromJson(steps.servicenow_incident.outputs.response).result.assigned_to.link }},
+              "urgency": ${{ fromJson(steps.servicenow_incident.outputs.response).result.urgency }},
+              "contactType": ${{ fromJson(steps.servicenow_incident.outputs.response).result.contact_type }},
+              "createdOn": ${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_on }},
+              "createdBy": ${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_by }},
+              "isActive": ${{ fromJson(steps.servicenow_incident.outputs.response).result.active }},
+              "priority": ${{ fromJson(steps.servicenow_incident.outputs).response.result.priority }}
             }
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
