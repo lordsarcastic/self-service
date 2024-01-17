@@ -44,7 +44,7 @@ jobs:
       
       - name: Visualize request
         run: |
-          echo '{"short_description": "${{ inputs.short_description }}"", "assigned_to": "${{ inputs.assigned_to }}", "urgency": "${{ inputs.urgency }}", "sysparm_display_value": "${{ inputs.sysparm_display_value }}", "sysparm_input_display_value": "${{ inputs.sysparm_input_display_value }}"}'
+          echo '{"short_description": "${{ inputs.short_description }}", "assigned_to": "${{ inputs.assigned_to }}", "urgency": "${{ inputs.urgency }}", "sysparm_display_value": "${{ inputs.sysparm_display_value }}", "sysparm_input_display_value": "${{ inputs.sysparm_input_display_value }}"}'
 
       - name: Create a ServiceNow incident
         id: servicenow_incident
