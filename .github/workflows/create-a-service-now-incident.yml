@@ -86,16 +86,16 @@ jobs:
           blueprint: servicenowIncident
           properties: |-
             {
-              "category": ${{ fromJson(steps.servicenow_incident.outputs.response).result.category }},
-              "reopenCount": ${{ fromJson(steps.servicenow_incident.outputs.response).result.reopen_count }},
-              "severity": ${{ fromJson(steps.servicenow_incident.outputs.response).result.severity }},
-              "assignedTo": ${{ fromJson(steps.servicenow_incident.outputs.response).result.assigned_to.link }},
-              "urgency": ${{ fromJson(steps.servicenow_incident.outputs.response).result.urgency }},
-              "contactType": ${{ fromJson(steps.servicenow_incident.outputs.response).result.contact_type }},
-              "createdOn": ${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_on }},
-              "createdBy": ${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_by }},
-              "isActive": ${{ fromJson(steps.servicenow_incident.outputs.response).result.active }},
-              "priority": ${{ fromJson(steps.servicenow_incident.outputs.response).result.priority }}
+              "category": "${{ fromJson(steps.servicenow_incident.outputs.response).result.category }}",
+              "reopenCount": "${{ fromJson(steps.servicenow_incident.outputs.response).result.reopen_count }}",
+              "severity": "${{ fromJson(steps.servicenow_incident.outputs.response).result.severity }}",
+              "assignedTo": "${{ fromJson(steps.servicenow_incident.outputs.response).result.assigned_to.link }}",
+              "urgency": "${{ fromJson(steps.servicenow_incident.outputs.response).result.urgency }}",
+              "contactType": "${{ fromJson(steps.servicenow_incident.outputs.response).result.contact_type }}",
+              "createdOn": "${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_on }}",
+              "createdBy": "${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_by }}",
+              "isActive": "${{ fromJson(steps.servicenow_incident.outputs.response).result.active }}",
+              "priority": "${{ fromJson(steps.servicenow_incident.outputs.response).result.priority }}"
             }
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
