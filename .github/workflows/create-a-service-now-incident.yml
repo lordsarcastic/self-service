@@ -1,0 +1,110 @@
+name: UPSERT workflow
+on:
+  workflow_dispatch:
+    inputs:
+      short_description:
+        type: string
+      assigned_to:
+        type: string
+      urgency:
+        type: string
+      sysparm_display_value:
+        type: string
+      sysparm_input_display_value:
+        type: boolean
+      port_payload:
+        required: true
+        description: "Port's payload, including details for who triggered the action and general context (blueprint, run id, etc...)"
+        type: string
+    secrets:
+      SERVICENOW_USERNAME:
+        required: true
+      SERVICENOW_PASSWORD:
+        required: true
+      SERVICENOW_INSTANCE_URL:
+        required: true
+      PORT_CLIENT_ID:
+        required: true
+      PORT_CLIENT_SECRET:
+        required: true
+
+jobs:
+  create-entity-in-port-and-update-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create a log message
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+          logMessage: Starting request to create ServiceNow incident
+
+      - name: Create a ServiceNow incident
+        id: servicenow_incident
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "${{ secrets.SERVICENOW_INSTANCE_URL }}/api/now/table/incident"
+          method: "POST"
+          username: ${{ secrets.SERVICENOW_USERNAME }}
+          password: ${{ secrets.SERVICENOW_PASSWORD }}
+          customHeaders: '{"Content-Type": "application/json"}'
+          data: '{"short_description": ${{ inputs.short_description }}, "assigned_to": ${{ inputs.assigned_to }}, "urgency": ${{ inputs.urgency }}, "sysparm_display_value": ${{ inputs.sysparm_display_value }}, "sysparm_input_display_value": ${{ inputs.sysparm_input_display_value }}}'
+
+      - name: Create a log message
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+          logMessage: Finished request to create ServiceNow incident
+
+
+      - name: Create a log message
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+          logMessage: Ingesting ServiceNow incident into Port
+
+      - name: UPSERT Entity
+        uses: port-labs/port-github-action@v1
+        with:
+          identifier: ${{ steps.servicenow_incident.outputs.body.result.number }}
+          title: ${{ steps.servicenow_incident.outputs.body.result.short_description }}
+          blueprint: servicenowIncident
+          properties: |-
+            {
+              "category": ${{ steps.servicenow_incident.outputs.body.result.category }},
+              "reopenCount": ${{ steps.servicenow_incident.outputs.body.result.reopen_count }},
+              "severity": ${{ steps.servicenow_incident.outputs.body.result.severity }},
+              "assignedTo": ${{ steps.servicenow_incident.outputs.body.result.assigned_to.link }},
+              "urgency": ${{ steps.servicenow_incident.outputs.body.result.urgency }},
+              "contactType": ${{ steps.servicenow_incident.outputs.body.result.contact_type }},
+              "createdOn": ${{ steps.servicenow_incident.outputs.body.result.sys_created_on }},
+              "createdBy": ${{ steps.servicenow_incident.outputs.body.result.sys_created_by }},
+              "isActive": ${{ steps.servicenow_incident.outputs.body.result.active }},
+              "priority": ${{ steps.servicenow_incident.outputs.body.result.priority }}
+            }
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: UPSERT
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+
+      - name: Create a log message
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+          logMessage: Finished ingesting ServiceNow incident into Port
