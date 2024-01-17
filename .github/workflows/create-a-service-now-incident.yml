@@ -95,7 +95,7 @@ jobs:
               "createdOn": ${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_on }},
               "createdBy": ${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_by }},
               "isActive": ${{ fromJson(steps.servicenow_incident.outputs.response).result.active }},
-              "priority": ${{ fromJson(steps.servicenow_incident.outputs).response.result.priority }}
+              "priority": ${{ fromJson(steps.servicenow_incident.outputs.response).result.priority }}
             }
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
