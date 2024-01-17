@@ -88,6 +88,16 @@ jobs:
           original_date="${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_on }}"
           formatted_date=$(date -d "${original_date}" -u +"%Y-%m-%dT%H:%M:%SZ")
           echo "formatted_date=${formatted_date}" >> $GITHUB_ENV
+      
+      - name: Create a log message
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+          logMessage: ${{ steps.format_date.outputs.formatted_date }}
 
       - name: UPSERT Entity
         uses: port-labs/port-github-action@v1
