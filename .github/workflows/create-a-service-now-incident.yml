@@ -30,6 +30,10 @@ on:
 
 jobs:
   create-entity-in-port-and-update-run:
+    outputs:
+      id: formatted_date
+      value: ${{ steps.format_date.outputs.formatted_date }}
+
     runs-on: ubuntu-latest
     steps:
       - name: Create a log message
@@ -79,10 +83,11 @@ jobs:
           logMessage: Ingesting ServiceNow incident into Port
       
       - name: Convert createdOn to desired format
+        id: format_date
         run: |
           original_date="${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_on }}"
           formatted_date=$(date -d "${original_date}" -u +"%Y-%m-%dT%H:%M:%SZ")
-          echo "::set-output name=formatted_date::${formatted_date}"
+          echo "formatted_date=${formatted_date}" >> $GITHUB_ENV
 
       - name: UPSERT Entity
         uses: port-labs/port-github-action@v1
@@ -98,7 +103,7 @@ jobs:
               "assignedTo": "${{ fromJson(steps.servicenow_incident.outputs.response).result.assigned_to.link }}",
               "urgency": "${{ fromJson(steps.servicenow_incident.outputs.response).result.urgency }}",
               "contactType": "${{ fromJson(steps.servicenow_incident.outputs.response).result.contact_type }}",
-              "createdOn": "${{ steps.format-date.outputs.formatted_date }}",
+              "createdOn": "${{ needs.format-date.outputs.formatted_date }}",
               "createdBy": "${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_by }}",
               "isActive": "${{ fromJson(steps.servicenow_incident.outputs.response).result.active }}",
               "priority": "${{ fromJson(steps.servicenow_incident.outputs.response).result.priority }}"
