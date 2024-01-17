@@ -77,6 +77,12 @@ jobs:
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_payload).context.runId}}
           logMessage: Ingesting ServiceNow incident into Port
+      
+      - name: Convert createdOn to desired format
+        run: |
+          original_date="${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_on }}"
+          formatted_date=$(date -d "${original_date}" -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "::set-output name=formatted_date::${formatted_date}"
 
       - name: UPSERT Entity
         uses: port-labs/port-github-action@v1
@@ -92,7 +98,7 @@ jobs:
               "assignedTo": "${{ fromJson(steps.servicenow_incident.outputs.response).result.assigned_to.link }}",
               "urgency": "${{ fromJson(steps.servicenow_incident.outputs.response).result.urgency }}",
               "contactType": "${{ fromJson(steps.servicenow_incident.outputs.response).result.contact_type }}",
-              "createdOn": "${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_on }}",
+              "createdOn": "${{ steps.format-date.outputs.formatted_date }}",
               "createdBy": "${{ fromJson(steps.servicenow_incident.outputs.response).result.sys_created_by }}",
               "isActive": "${{ fromJson(steps.servicenow_incident.outputs.response).result.active }}",
               "priority": "${{ fromJson(steps.servicenow_incident.outputs.response).result.priority }}"
