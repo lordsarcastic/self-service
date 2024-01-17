@@ -51,7 +51,7 @@ jobs:
           username: ${{ secrets.SERVICENOW_USERNAME }}
           password: ${{ secrets.SERVICENOW_PASSWORD }}
           customHeaders: '{"Content-Type": "application/json"}'
-          data: '{"short_description": ${{ inputs.short_description }}, "assigned_to": ${{ inputs.assigned_to }}, "urgency": ${{ inputs.urgency }}, "sysparm_display_value": ${{ inputs.sysparm_display_value }}, "sysparm_input_display_value": ${{ inputs.sysparm_input_display_value }}}'
+          data: '{"short_description": "${{ inputs.short_description }}"", "assigned_to": "${{ inputs.assigned_to }}", "urgency": "${{ inputs.urgency }}", "sysparm_display_value": "${{ inputs.sysparm_display_value }}", "sysparm_input_display_value": "${{ inputs.sysparm_input_display_value }}"}'
 
       - name: Create a log message
         uses: port-labs/port-github-action@v1
