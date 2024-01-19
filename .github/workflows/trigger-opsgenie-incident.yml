@@ -52,7 +52,7 @@ jobs:
           url: "https://api.eu.opsgenie.com/v1/incidents/create"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json", "Authorization": "GenieKey ${{ secrets.OPSGENIE_API_KEY }}"}'
-          data: '{"message": "${{ inputs.message }}", "description": "${{ inputs.description }}", "responders": "${{ inputs.responders }}", "tags": "${{ inputs.tags }}", "details": "${{ inputs.details }}", "priority": "${{ inputs.priority }}", "note": "${{ inputs.note }}", "impactedServices": "${{ inputs.impactedServices }}", "notifyStakeholders": "${{ inputs.notifyStakeholders }}"}'
+          data: '{"message": "${{ inputs.message }}", "description": "${{ inputs.description }}", "responders": ${{ inputs.responders }}, "tags": ${{ inputs.tags }}, "details": ${{ inputs.details }}, "priority": "${{ inputs.priority }}", "note": "${{ inputs.note }}", "impactedServices": ${{ inputs.impactedServices }}, "notifyStakeholders": ${{ inputs.notifyStakeholders }}}'
 
       - name: Inform completion of Opsgenie incident creation
         uses: port-labs/port-github-action@v1
