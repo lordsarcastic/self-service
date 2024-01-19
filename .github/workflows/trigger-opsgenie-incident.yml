@@ -1,0 +1,77 @@
+name: UPSERT workflow
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        type: string
+      description:
+        type: string
+      responders:
+        type: string
+      tags:
+        type: string
+      details:
+        type: string
+      priority:
+        type: string
+      note:
+        type: string
+      impactedServices:
+        type: string
+      statusPageEntry:
+        type: string
+      notifyStakeholders:
+        type: boolean
+      port_payload:
+        required: true
+        description: Port's payload, including details for who triggered the action and
+          general context (blueprint, run id, etc...)
+        type: string
+      secrets:
+        OPSGENIE_API_KEY:
+          required: true
+        PORT_CLIENT_ID:
+          required: true
+        PORT_CLIENT_SECRET:
+          required: true
+jobs:
+  create-entity-in-port-and-update-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inform start of Opsgenie incident creation
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+          logMessage: Starting request to create Opsgenie incident
+      
+      - name: Create a Opsgenie incident
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "https://api.eu.opsgenie.com/v1/incidents/create"
+          method: "POST"
+          customHeaders: '{"Content-Type": "application/json", "Authorization": "GenieKey ${{ secrets.OPSGENIE_API_KEY }}"}'
+          data: '{"message": "${{ inputs.message }}", "description": "${{ inputs.description }}", "responders": "${{ inputs.responders }}", "tags": "${{ inputs.tags }}", "details": "${{ inputs.details }}", "priority": "${{ inputs.priority }}", "note": "${{ inputs.note }}", "impactedServices": "${{ inputs.impactedServices }}", "statusPageEntry": "${{ inputs.statusPageEntry }}", "notifyStakeholders": "${{ inputs.notifyStakeholders }}"}'
+
+      - name: Inform completion of Opsgenie incident creation
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+          logMessage: Finished request to create Opsgenie incident
+
+      - name: Inform of workflow completion
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{ fromJson(inputs.port_payload).context.runId }}
+          logMessage: Finished ingesting Opsgenie incident into Port
