@@ -8,16 +8,20 @@ on:
         type: string
       responders:
         type: string
+        default: '[]'
       tags:
         type: string
+        default: '[]'
       details:
         type: string
+        default: '{}'
       priority:
         type: string
       note:
         type: string
       impactedServices:
         type: string
+        default: '[]'
       notifyStakeholders:
         type: boolean
       port_payload:
