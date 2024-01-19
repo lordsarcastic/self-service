@@ -1,4 +1,4 @@
-name: UPSERT workflow
+name: Trigger Opsgenie Incident
 on:
   workflow_dispatch:
     inputs:
