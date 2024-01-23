@@ -1,0 +1,120 @@
+name: Trigger Datadog Incident
+on:
+  workflow_dispatch:
+    inputs:
+      customerImpactScope:
+        type: string
+      customerImpacted:
+        type: boolean
+      title:
+        type: string
+      notificationHandleName:
+        type: string
+      notificationHandleEmail:
+        type: string
+      port_payload:
+        required: true
+        description: Port's payload, including details for who triggered the action and
+          general context (blueprint, run id, etc...)
+        type: string
+      secrets:
+        DD_API_KEY:
+          required: true
+        DD_APPLICATION_KEY:
+          required: true
+        DD_API_URL:
+          required: true
+        PORT_CLIENT_ID:
+          required: true
+        PORT_CLIENT_SECRET:
+          required: true
+jobs:
+  create-entity-in-port-and-update-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inform start of Datadog incident creation
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+          logMessage: Starting request to create Datadog incident
+
+      - name: Create a Datadog incident
+        id: datadog_incident
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "${{ secrets.DD_API_URL }}/api/v2/incidents"
+          method: "POST"
+          customHeaders: '{"Content-Type": "application/json", "DD-API-KEY": "${{ secrets.DD_API_KEY }}", "DD-APPLICATION-KEY": "${{ secrets.DD_APPLICATION_KEY }}"}'
+          data: '{"data": {"type": "incident", "attributes": {"customer_impact_scope": "${{ inputs.customerImpactScope }}", "customer_impacted": "${{ inputs.customerImpacted }}", "title": "${{ inputs.title }}", "notification_handles": [{"display_name": "${{ inputs.notificationHandleName }}", "handle": "${{ inputs.notificationHandleEmail }}"}]}}}'
+
+      - name: Inform completion of Datadog incident creation
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+          logMessage: Finished request to create Datadog incident
+      
+      - name: Inform ingestion of Datadog incident into Port
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+          logMessage: Ingesting Datadog incident into Port
+
+      - name: UPSERT Entity
+        uses: port-labs/port-github-action@v1
+        with:
+          identifier: ${{ fromJson(steps.datadog_incident.outputs.response).data.id }}
+          title: ${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.title }}
+          blueprint: datadogIncident
+          properties: |-
+            {
+              "customerImpactScope": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_scope }}",
+              "customerImpacted": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impacted }}",
+              "customerImpactStart": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_start }}",
+              "customerImpactEnd": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_end }}",
+              "createdBy": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.created_by.data.attributes.name }}",
+              "created": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.created }}",
+              "updatedAt": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.modified }}",
+              "customerImpactDuration": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_duration }}",
+              "timeToDetect": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.time_to_detect }}",
+              "timeToRepair": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.time_to_repair }}",
+              "severity": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.severity }}",
+              "state": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.state }}"
+            }
+          relations: "{}"
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: UPSERT
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+    
+      - name: Inform completion of Datadog incident ingestion into Port
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_payload).context.runId}}
+          logMessage: Finished request to ingest Datadog incident into Port
+
+      - name: Inform of workflow completion
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{ fromJson(inputs.port_payload).context.runId }}
+          logMessage: Workflow completed
