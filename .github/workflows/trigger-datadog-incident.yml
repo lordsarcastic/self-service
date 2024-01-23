@@ -30,6 +30,12 @@ on:
           required: true
 jobs:
   create-entity-in-port-and-update-run:
+    outputs:
+      customer_impact_start: ${{ steps.format_date.outputs.customer_impact_start }}
+      customer_impact_end: ${{ steps.format_date.outputs.customer_impact_end }}
+      created: ${{ steps.format_date.outputs.created }}
+      modified: ${{ steps.format_date.outputs.modified }}
+
     runs-on: ubuntu-latest
     steps:
       - name: Inform start of Datadog incident creation
@@ -71,6 +77,18 @@ jobs:
           runId: ${{fromJson(inputs.port_payload).context.runId}}
           logMessage: Ingesting Datadog incident into Port
 
+      - name: Convert dates to desired format
+        id: format_date
+        run: |
+          customer_impact_start=$(date -d "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_start }}" -u +"%Y-%m-%dT%H:%M:%SZ")
+          customer_impact_end=$(date -d "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_end }}" -u +"%Y-%m-%dT%H:%M:%SZ")
+          created=$(date -d "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.created }}" -u +"%Y-%m-%dT%H:%M:%SZ")
+          modified=$(date -d "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.modified }}" -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "customer_impact_start=${customer_impact_start}" >> $GITHUB_OUTPUT
+          echo "customer_impact_end=${customer_impact_end}" >> $GITHUB_OUTPUT
+          echo "created=${created}" >> $GITHUB_OUTPUT
+          echo "modified=${modified}" >> $GITHUB_OUTPUT
+
       - name: UPSERT Entity
         uses: port-labs/port-github-action@v1
         with:
@@ -81,11 +99,11 @@ jobs:
             {
               "customerImpactScope": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_scope }}",
               "customerImpacted": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impacted }}",
-              "customerImpactStart": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_start }}",
-              "customerImpactEnd": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_end }}",
+              "customerImpactStart": "${{ steps.format_date.output.customer_impact_start }}",
+              "customerImpactEnd": "${{ steps.format_date.output.customer_impact_end }}",
               "createdBy": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.created_by.data.attributes.name }}",
-              "created": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.created }}",
-              "updatedAt": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.modified }}",
+              "created": "${{ steps.format_date.output.created }}",
+              "updatedAt": "${{ steps.format_date.output.modified }}",
               "customerImpactDuration": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_duration }}",
               "timeToDetect": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.time_to_detect }}",
               "timeToRepair": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.time_to_repair }}",
