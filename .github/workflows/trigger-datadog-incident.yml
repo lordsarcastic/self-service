@@ -30,15 +30,15 @@ on:
           required: true
 jobs:
   create-entity-in-port-and-update-run:
-    outputs:
-      - id: customer_impact_start
-        value: ${{ steps.format_date.outputs.customer_impact_start }}
-      - id: customer_impact_end
-        value: ${{ steps.format_date.outputs.customer_impact_end }}
-      - id: created
-        value: ${{ steps.format_date.outputs.created }}
-      - id: modified
-        value: ${{ steps.format_date.outputs.modified }}
+    # outputs:
+    #   - id: customer_impact_start
+    #     value: ${{ steps.format_date.outputs.customer_impact_start }}
+    #   - id: customer_impact_end
+    #     value: ${{ steps.format_date.outputs.customer_impact_end }}
+    #   - id: created
+    #     value: ${{ steps.format_date.outputs.created }}
+    #   - id: modified
+    #     value: ${{ steps.format_date.outputs.modified }}
 
     runs-on: ubuntu-latest
     steps:
@@ -103,11 +103,11 @@ jobs:
             {
               "customerImpactScope": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_scope }}",
               "customerImpacted": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impacted }}",
-              "customerImpactStart": "${{ steps.format_date.output.customer_impact_start }}",
-              "customerImpactEnd": "${{ steps.format_date.output.customer_impact_end }}",
+              "customerImpactStart": "${{ steps.format_date.outputs.customer_impact_start }}",
+              "customerImpactEnd": "${{ steps.format_date.outputs.customer_impact_end }}",
               "createdBy": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.created_by.data.attributes.name }}",
-              "created": "${{ steps.format_date.output.created }}",
-              "updatedAt": "${{ steps.format_date.output.modified }}",
+              "created": "${{ steps.format_date.outputs.created }}",
+              "updatedAt": "${{ steps.format_date.outputs.modified }}",
               "customerImpactDuration": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.customer_impact_duration }}",
               "timeToDetect": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.time_to_detect }}",
               "timeToRepair": "${{ fromJson(steps.datadog_incident.outputs.response).data.attributes.time_to_repair }}",
