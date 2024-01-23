@@ -30,11 +30,15 @@ on:
           required: true
 jobs:
   create-entity-in-port-and-update-run:
-    outputs:
-      customer_impact_start: ${{ steps.format_date.outputs.customer_impact_start }}
-      customer_impact_end: ${{ steps.format_date.outputs.customer_impact_end }}
-      created: ${{ steps.format_date.outputs.created }}
-      modified: ${{ steps.format_date.outputs.modified }}
+    # outputs:
+    #   - id: customer_impact_start
+    #   value: ${{ steps.format_date.outputs.customer_impact_start }}
+    #   - id: customer_impact_end
+    #   value: ${{ steps.format_date.outputs.customer_impact_end }}
+    #   - id: created
+    #   value: ${{ steps.format_date.outputs.created }}
+    #   - id: modified
+    #   value: ${{ steps.format_date.outputs.modified }}
 
     runs-on: ubuntu-latest
     steps:
