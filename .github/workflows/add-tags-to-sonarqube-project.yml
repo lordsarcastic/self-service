@@ -36,7 +36,7 @@ jobs:
         id: servicenow_incident
         uses: fjogeleit/http-request-action@v1
         with:
-          url: "${{ secrets.SONARQUBE_HOST_URL }}/api/project_tags/set?project=${{ inputs.project }}&tags=${{ inputs.tags }}"
+          url: "${{ secrets.SONARQUBE_HOST_URL }}/api/project_tags/set?project=${{ fromJson(inputs.port_payload).context.entity }}&tags=${{ inputs.tags }}"
           method: "POST"
           bearerToken: ${{ secrets.SONARQUBE_API_TOKEN }}
           customHeaders: '{"Content-Type": "application/json"}'
