@@ -2,8 +2,6 @@ name: Add tags to SonarQube project
 on:
   workflow_dispatch:
     inputs:
-      project:
-        type: string
       tags:
         type: string
       port_payload:
