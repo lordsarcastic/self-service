@@ -9,7 +9,6 @@ on:
         description: Port's payload, including details for who triggered the action and
           general context (blueprint, run id, etc...)
         type: string
-
     secrets:
       SONARQUBE_HOST_URL:
         required: true
@@ -20,69 +19,31 @@ jobs:
   create-entity-in-port-and-update-run:
     runs-on: ubuntu-latest
     steps:
-    - name: Create a log message
-        uses: port-labs/port-github-action@v1
-        with:
-          clientId: ${{ secrets.PORT_CLIENT_ID }}
-          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
-          baseUrl: https://api.getport.io
-          operation: PATCH_RUN
-          runId: ${{fromJson(inputs.port_payload).context.runId}}
-          logMessage: Starting request to add tags to SonarQube project
-    
-    - name: Create a ServiceNow incident
-        id: servicenow_incident
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: "${{ secrets.SONARQUBE_HOST_URL }}/api/project_tags/set?project=${{ fromJson(inputs.port_payload).context.entity }}&tags=${{ inputs.tags }}"
-          method: "POST"
-          bearerToken: ${{ secrets.SONARQUBE_API_TOKEN }}
-          customHeaders: '{"Content-Type": "application/json"}'
+      - name: Create a log message
+          uses: port-labs/port-github-action@v1
+          with:
+            clientId: ${{ secrets.PORT_CLIENT_ID }}
+            clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+            baseUrl: https://api.getport.io
+            operation: PATCH_RUN
+            runId: ${{fromJson(inputs.port_payload).context.runId}}
+            logMessage: Starting request to add tags to SonarQube project
+      
+      - name: Create a ServiceNow incident
+          id: servicenow_incident
+          uses: fjogeleit/http-request-action@v1
+          with:
+            url: "${{ secrets.SONARQUBE_HOST_URL }}/api/project_tags/set?project=${{ fromJson(inputs.port_payload).context.entity }}&tags=${{ inputs.tags }}"
+            method: "POST"
+            bearerToken: ${{ secrets.SONARQUBE_API_TOKEN }}
+            customHeaders: '{"Content-Type": "application/json"}'
 
-    - name: Create a log message
-        uses: port-labs/port-github-action@v1
-        with:
-          clientId: ${{ secrets.PORT_CLIENT_ID }}
-          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
-          baseUrl: https://api.getport.io
-          operation: PATCH_RUN
-          runId: ${{fromJson(inputs.port_payload).context.runId}}
-          logMessage: Finished request to create ServiceNow incident
-
-      # - name: UPSERT Entity
-      #   uses: port-labs/port-github-action@v1
-      #   with:
-      #     identifier: some_identifier
-      #     title: Some Title
-      #     team: "[]"
-      #     icon: DefaultBlueprint
-      #     blueprint: sonarQubeProject
-      #     properties: |-
-      #       {
-      #         "organization": "string",
-      #         "link": "https://example.com",
-      #         "lastAnalysisDate": "2024-02-29T08:05:50.503Z",
-      #         "numberOfBugs": 0,
-      #         "numberOfCodeSmells": 0,
-      #         "numberOfVulnerabilities": 0,
-      #         "numberOfHotSpots": 0,
-      #         "numberOfDuplications": 0,
-      #         "coverage": 0,
-      #         "mainBranch": "string",
-      #         "tags": []
-      #       }
-      #     relations: "{}"
-      #     clientId: ${{ secrets.PORT_CLIENT_ID }}
-      #     clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
-      #     baseUrl: https://api.getport.io
-      #     operation: UPSERT
-      #     runId: ${{fromJson(inputs.port_payload).context.runId}}
-      # - name: Create a log message
-      #   uses: port-labs/port-github-action@v1
-      #   with:
-      #     clientId: ${{ secrets.PORT_CLIENT_ID }}
-      #     clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
-      #     baseUrl: https://api.getport.io
-      #     operation: PATCH_RUN
-      #     runId: ${{fromJson(inputs.port_payload).context.runId}}
-      #     logMessage: An example of a log message
+      - name: Create a log message
+          uses: port-labs/port-github-action@v1
+          with:
+            clientId: ${{ secrets.PORT_CLIENT_ID }}
+            clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+            baseUrl: https://api.getport.io
+            operation: PATCH_RUN
+            runId: ${{fromJson(inputs.port_payload).context.runId}}
+            logMessage: Finished request to create ServiceNow incident
