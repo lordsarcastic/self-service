@@ -1,4 +1,4 @@
-name: UPSERT workflow
+name: Add tags to SonarQube project
 on:
   workflow_dispatch:
     inputs:
