@@ -47,7 +47,7 @@ jobs:
           summary: ${{github.event.inputs.title}}
           description: |
             ${{github.event.inputs.description}}
-          fields: '{"label": ["port-auth-service"]}'
+          fields: '{"labels": ["port-auth-service"]}'
 
           # Custom fields example
 
