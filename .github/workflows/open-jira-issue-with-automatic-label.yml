@@ -42,7 +42,7 @@ jobs:
         id: create
         uses: atlassian/gajira-create@v3
         with:
-          project: Port # change the name as you see fit
+          project: PORT # change the name as you see fit
           issuetype: ${{github.event.inputs.type}}
           summary: ${{github.event.inputs.title}}
           description: |
