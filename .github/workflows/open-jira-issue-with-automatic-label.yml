@@ -8,9 +8,6 @@ on:
       type:
         required: true
         type: string
-      description:
-        required: true
-        type: string
       port_payload:
         required: true
         description:
@@ -45,8 +42,6 @@ jobs:
           project: PORT # change the name as you see fit
           issuetype: ${{github.event.inputs.type}}
           summary: ${{github.event.inputs.title}}
-          description: |
-            ${{github.event.inputs.description}}
           fields: '{"labels": ["port-auth-service"]}'
 
           # Custom fields example
