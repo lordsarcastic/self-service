@@ -1,4 +1,4 @@
-name: UPSERT workflow
+name: Open Jira Issue with automatic label
 on:
   workflow_dispatch:
     inputs:
@@ -39,12 +39,10 @@ jobs:
         id: create
         uses: atlassian/gajira-create@v3
         with:
-          project: PORT # change the name as you see fit
+          project: <PROJECT-KEY> # change the name as you see fit
           issuetype: ${{github.event.inputs.type}}
           summary: ${{github.event.inputs.title}}
-          fields: '{"labels": ["port-auth-service"]}'
-
-          # Custom fields example
+          fields: '{"labels": ["<port-service>"]}'
 
       - name: Inform creation of Jira issue
         uses: port-labs/port-github-action@v1
@@ -52,7 +50,7 @@ jobs:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: PATCH_RUN
-          link: https://getport.atlassian.net/browse/${{ steps.create.outputs.issue }}
+          link: ${{ secrets.JIRA_BASE_URL }}/browse/${{ steps.create.outputs.issue }}
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
             Jira issue created! ✅
