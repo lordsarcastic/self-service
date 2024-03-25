@@ -8,6 +8,9 @@ on:
       type:
         required: true
         type: string
+      project:
+        required: true
+        type: string
       port_payload:
         required: true
         description:
@@ -39,7 +42,7 @@ jobs:
         id: create
         uses: atlassian/gajira-create@v3
         with:
-          project: PORT # change the name as you see fit
+          project: ${{github.event.inputs.type}}
           issuetype: ${{github.event.inputs.type}}
           summary: ${{github.event.inputs.title}}
           fields: '{"labels": ["port-${{ fromJson(inputs.port_payload).context.entity }}"]}'
