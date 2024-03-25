@@ -39,10 +39,10 @@ jobs:
         id: create
         uses: atlassian/gajira-create@v3
         with:
-          project: <PROJECT-KEY> # change the name as you see fit
+          project: PORT # change the name as you see fit
           issuetype: ${{github.event.inputs.type}}
           summary: ${{github.event.inputs.title}}
-          fields: '{"labels": ["<port-service>"]}'
+          fields: '{"labels": ["port-${{ fromJson(inputs.port_payload).context.entity }}"]}'
 
       - name: Inform creation of Jira issue
         uses: port-labs/port-github-action@v1
