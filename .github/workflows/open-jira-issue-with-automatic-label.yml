@@ -42,7 +42,7 @@ jobs:
         id: create
         uses: atlassian/gajira-create@v3
         with:
-          project: ${{github.event.inputs.type}}
+          project: ${{github.event.inputs.project}}
           issuetype: ${{github.event.inputs.type}}
           summary: ${{github.event.inputs.title}}
           fields: '{"labels": ["port-${{ fromJson(inputs.port_payload).context.entity }}"]}'
