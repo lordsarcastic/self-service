@@ -40,7 +40,7 @@ if not CODEOWNERS_FILE:
 credentials = {"clientId": PORT_CLIENT_ID, "clientSecret": PORT_CLIENT_SECRET}
 token_response = requests.post(f"{PORT_API_URL}/auth/access_token", json=credentials)
 if not token_response.ok:
-    logger.error("Error retrieving access token")
+    logger.error(f"Error retrieving access token: {token_response.json()}")
     sys.exit(1)
 
 access_token = token_response.json()["accessToken"]
