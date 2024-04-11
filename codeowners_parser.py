@@ -1,9 +1,13 @@
-import asyncio, os, re, sys
+import asyncio
+import os
+import re
+import sys
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-import httpx, requests
+import httpx
+import requests
 from loguru import logger
 
 PORT_API_URL = "https://api.getport.io/v1"
@@ -49,9 +53,7 @@ access_token = token_response.json()["accessToken"]
 headers = {"Authorization": f"Bearer {access_token}"}
 
 
-async def add_entity_to_port(
-    client: httpx.AsyncClient, blueprint_id, entity_object
-):
+async def add_entity_to_port(client: httpx.AsyncClient, blueprint_id, entity_object):
     """A function to create the passed entity in Port
 
     Params
@@ -116,6 +118,11 @@ PATTERNS = {
     GithubEntityType.TEAM: TEAM_REGEX,
 }
 
+def convert_to_valid_characters(input_string):
+    pattern = r"[^A-Za-z0-9@_.:\\/=-]"
+    output_string = re.sub(pattern, "@", input_string)
+
+    return output_string
 
 def parse_string_to_entity_type(text: str):
     for key, value in PATTERNS.items():
@@ -148,11 +155,10 @@ async def provide_entities():
             yield create_entity_from_value(*entry, pattern)
 
 
-def prepare_codeowner_pattern_entity(
-    entity: GithubEntity, codeowner: dict[str, Any]
-):
+def prepare_codeowner_pattern_entity(entity: GithubEntity, codeowner: dict[str, Any]):
+
     entity_object = {
-        "identifier": entity.pattern,
+        "identifier": convert_to_valid_characters(entity.pattern),
         "title": f"{entity.pattern} | {REPOSITORY_NAME}",
         "properties": {},
         "relations": {
@@ -161,28 +167,34 @@ def prepare_codeowner_pattern_entity(
             "user": [entity.value]
             if entity.type in [GithubEntityType.USERNAME, GithubEntityType.EMAIL]
             else [],
-            "codeownersFile": codeowner["identifier"]
+            "codeownersFile": codeowner["identifier"],
         },
     }
-    
+
     return entity_object
+
 
 def crunch_entities(existing_entities: dict[str, Any], entity: dict[str, Any]):
     if entity["identifier"] in existing_entities:
-        teams = set([
-            *entity["relations"]["team"],
-            *existing_entities[entity["identifier"]]["relations"]["team"]
-        ])
-        users = set([
-            *entity["relations"]["user"],
-            *existing_entities[entity["identifier"]]["relations"]["user"]
-        ])
+        teams = set(
+            [
+                *entity["relations"]["team"],
+                *existing_entities[entity["identifier"]]["relations"]["team"],
+            ]
+        )
+        users = set(
+            [
+                *entity["relations"]["user"],
+                *existing_entities[entity["identifier"]]["relations"]["user"],
+            ]
+        )
         existing_entities[entity["identifier"]]["relations"]["team"] = list(teams)
         existing_entities[entity["identifier"]]["relations"]["user"] = list(users)
     else:
         existing_entities[entity["identifier"]] = entity
-    
+
     return existing_entities
+
 
 async def main():
     logger.info("Starting Port integration")
@@ -203,7 +215,7 @@ async def main():
 
         for entity in crunched_entities.values():
             await add_entity_to_port(client, CODEOWNERS_PATTERN_BLUEPRINT, entity)
-    
+
     logger.info("Finished Port integration")
 
 
