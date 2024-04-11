@@ -46,4 +46,4 @@ jobs:
           baseUrl: https://api.getport.io
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_payload).context.runId}}
-          logMessage: Finished request to create ServiceNow incident
+          logMessage: Finished request to create SonarQube project

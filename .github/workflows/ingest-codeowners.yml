@@ -1,0 +1,30 @@
+name: Ingest Codeowners
+on:
+   push:
+    branches:
+      - 'main'
+      - 'releases/**'
+
+jobs:
+  ingest_codeowners:
+    runs-on: ubuntu-latest
+  
+  steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install httpx requests loguru
+      
+      - name: Ingest Codeowners
+        run: |
+          python codeowners_parser.py
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
