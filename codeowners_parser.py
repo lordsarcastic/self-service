@@ -32,13 +32,17 @@ def get_codeowner_file():
 CODEOWNERS_FILE = get_codeowner_file()
 
 if not CODEOWNERS_FILE:
-    print("Error parsing file: CODEOWNERS not found in the right location")
+    logger.error("Error parsing file: CODEOWNERS not found in the right location")
     sys.exit(1)
 
 
 # Get Port Access Token
 credentials = {"clientId": PORT_CLIENT_ID, "clientSecret": PORT_CLIENT_SECRET}
 token_response = requests.post(f"{PORT_API_URL}/auth/access_token", json=credentials)
+if not token_response.ok:
+    logger.error("Error retrieving access token")
+    sys.exit(1)
+
 access_token = token_response.json()["accessToken"]
 
 # You can now use the value in access_token when making further requests
