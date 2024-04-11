@@ -29,3 +29,5 @@ jobs:
           python codeowners_parser.py
         env:
           REPO_NAME: ${{ github.event.repository.name }}
+          PORT_CLIENT_ID: ${{ secrets.PORT_CLIENT_ID }}
+          PORT_CLIENT_SECRET: ${{ secrets.PORT_CLIENT_SECRET }}
