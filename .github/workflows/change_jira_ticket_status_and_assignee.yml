@@ -139,13 +139,13 @@ jobs:
         id: user_list_from_search
         if: steps.search_for_assignee.outcome == 'success'
         run: |
-          selected_user_id=$(echo "${{ steps.servicenow_incident.outputs.response }}" | jq -r 'if length > 0 then .[0].accountId else null end')
-          selected_user_name=$(echo "${{ steps.servicenow_incident.outputs.response }}" | jq -r 'if length > 0 then .[0].displayName else null end')
+          selected_user_id=$(echo "${{ steps.servicenow_incident.outputs.response }}" | jq -r 'if length > 0 then .[0].accountId else "empty" end')
+          selected_user_name=$(echo "${{ steps.servicenow_incident.outputs.response }}" | jq -r 'if length > 0 then .[0].displayName else "empty" end')
           echo "selected_user_id=${selected_user_id}" >> $GITHUB_OUTPUT
           echo "selected_user_name=${selected_user_name}" >> $GITHUB_OUTPUT
 
       - name: Inform user existence
-        if: steps.user_list_from_search.outputs.selected_user_id != "null"
+        if: steps.user_list_from_search.outputs.selected_user_id != "empty"
         uses: port-labs/port-github-action@v1
         with:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
@@ -156,7 +156,7 @@ jobs:
             User found 🥹 Assigning ticket ${{ steps.create.outputs.issue }} to ${{ steps.format_date.outputs.selected_user_name }}... ⛴️
 
       - name: Inform user inexistence
-        if: steps.user_list_from_search.outputs.selected_user_id == "null"
+        if: steps.user_list_from_search.outputs.selected_user_id == "empty"
         uses: port-labs/port-github-action@v1
         with:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
@@ -168,7 +168,7 @@ jobs:
 
       - name: Assign ticket to selected user
         id: assign_ticket
-        if: steps.user_list_from_search.outputs.selected_user_id != "null"
+        if: steps.user_list_from_search.outputs.selected_user_id != "empty"
         uses: fjogeleit/http-request-action@v1
         with:
           url: "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.create.outputs.issue }}/assignee"
