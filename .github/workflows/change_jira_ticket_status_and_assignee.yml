@@ -80,7 +80,7 @@ jobs:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: PATCH_RUN
-          link: ${{ secrets.JIRA_BASE_URL }}/browse/${{ steps.create.outputs.issue }}
+          link: ${{ secrets.JIRA_BASE_URL }}/browse/${{ fromJson(inputs.port_payload).context.entity }}
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
             Jira issue status changed to ${{ github.event.inputs.status }}! ✅
@@ -110,7 +110,7 @@ jobs:
             Assignee field is blank, skipping assigning of ticket... ⛴️
 
       - name: Inform searching of user in user list
-        if: steps.inform_assignee_start.outcome == 'skipped'
+        if: steps.inform_skip_assignee.outcome == 'skipped'
         uses: port-labs/port-github-action@v1
         with:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
@@ -122,7 +122,7 @@ jobs:
 
       - name: Search for assignee among user list
         id: search_for_assignee
-        if: steps.inform_assignee_start.outcome == 'skipped'
+        if: steps.inform_skip_assignee.outcome == 'skipped'
         uses: fjogeleit/http-request-action@v1
         with:
           url: "${{ secrets.JIRA_BASE_URL }}/rest/api/3/user/search?query=${{ github.event.inputs.assignee }}"
@@ -153,7 +153,7 @@ jobs:
           operation: PATCH_RUN
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
-            User found 🥹 Assigning ticket ${{ steps.create.outputs.issue }} to ${{ steps.format_date.outputs.selected_user_name }}... ⛴️
+            User found 🥹 Assigning ticket ${{ fromJson(inputs.port_payload).context.entity }} to ${{ steps.format_date.outputs.selected_user_name }}... ⛴️
 
       - name: Inform user inexistence
         if: steps.user_list_from_search.outputs.selected_user_id == 'empty'
@@ -171,7 +171,7 @@ jobs:
         if: steps.user_list_from_search.outputs.selected_user_id != 'empty'
         uses: fjogeleit/http-request-action@v1
         with:
-          url: "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.create.outputs.issue }}/assignee"
+          url: "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ fromJson(inputs.port_payload).context.entity }}/assignee"
           method: "PUT"
           username: ${{ secrets.JIRA_USER_EMAIL }}
           password: ${{ secrets.JIRA_API_TOKEN }}
@@ -185,7 +185,7 @@ jobs:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: PATCH_RUN
-          link: ${{ secrets.JIRA_BASE_URL }}/browse/${{ steps.create.outputs.issue }}
+          link: ${{ secrets.JIRA_BASE_URL }}/browse/${{ fromJson(inputs.port_payload).context.entity }}
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
             Jira issue has been assigned to ${{ steps.format_date.outputs.selected_user_name }}! ✅
