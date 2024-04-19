@@ -139,8 +139,8 @@ jobs:
         id: user_list_from_search
         if: steps.search_for_assignee.outcome == 'success'
         run: |
-          selected_user_id=$(echo ${{ steps.search_for_assignee.outputs.response }} | jq -r 'if length > 0 then .[0].accountId else "empty" end')
-          selected_user_name=$(echo ${{ steps.search_for_assignee.outputs.response }} | jq -r 'if length > 0 then .[0].displayName else "empty" end')
+          selected_user_id=$(echo '${{ steps.search_for_assignee.outputs.response }}' | jq -r 'if length > 0 then .[0].accountId else "empty" end')
+          selected_user_name=$(echo '${{ steps.search_for_assignee.outputs.response }}' | jq -r 'if length > 0 then .[0].displayName else "empty" end')
           echo "selected_user_id=${selected_user_id}" >> $GITHUB_OUTPUT
           echo "selected_user_name=${selected_user_name}" >> $GITHUB_OUTPUT
 
@@ -153,7 +153,7 @@ jobs:
           operation: PATCH_RUN
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
-            User found 🥹 Assigning ticket ${{ fromJson(inputs.port_payload).context.entity }} to ${{ steps.format_date.outputs.selected_user_name }}... ⛴️
+            User found 🥹 Assigning ticket ${{ fromJson(inputs.port_payload).context.entity }} to ${{ steps.user_list_from_search.outputs.selected_user_name }}... ⛴️
 
       - name: Inform user inexistence
         if: steps.user_list_from_search.outputs.selected_user_id == 'empty'
@@ -176,7 +176,7 @@ jobs:
           username: ${{ secrets.JIRA_USER_EMAIL }}
           password: ${{ secrets.JIRA_API_TOKEN }}
           customHeaders: '{"Content-Type": "application/json"}'
-          data: '{"accountId": "${{ steps.format_date.outputs.selected_user_id }}"}'
+          data: '{"accountId": "${{ steps.user_list_from_search.outputs.selected_user_id }}"}'
 
       - name: Inform ticket has been assigned
         if: steps.assign_ticket.outcome == 'success'
