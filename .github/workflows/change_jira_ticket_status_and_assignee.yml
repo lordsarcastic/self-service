@@ -55,7 +55,7 @@ jobs:
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
             Changing status of Jira issue... ⛴️
-      
+
       - name: Inform skipping of changing Jira ticket status
         id: inform_skip_ticket_status
         if: steps.inform_ticket_start.outcome == 'skipped'
@@ -111,7 +111,7 @@ jobs:
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
             Assignee field is blank, skipping assigning of ticket... ⛴️
-      
+
       - name: Inform searching of user in user list
         if: steps.inform_assignee_start.outcome == 'skipped'
         uses: port-labs/port-github-action@v1
@@ -133,11 +133,11 @@ jobs:
           username: ${{ secrets.JIRA_USER_EMAIL }}
           password: ${{ secrets.JIRA_API_TOKEN }}
           customHeaders: '{"Content-Type": "application/json"}'
-      
+
       - name: Install jq
         run: sudo apt-get install jq
         if: steps.search_for_assignee.outcome == 'success'
-      
+
       - name: Retrieve user list from search
         id: user_list_from_search
         if: steps.search_for_assignee.outcome == 'success'
@@ -146,7 +146,7 @@ jobs:
           selected_user_name=$(echo "${{ steps.servicenow_incident.outputs.response }}" | jq -r 'if length > 0 then .[0].displayName else null end')
           echo "selected_user_id=${selected_user_id}" >> $GITHUB_OUTPUT
           echo "selected_user_name=${selected_user_name}" >> $GITHUB_OUTPUT
-      
+
       - name: Inform user existence
         if: steps.user_list_from_search.outputs.selected_user_id != "null"
         uses: port-labs/port-github-action@v1
@@ -157,7 +157,7 @@ jobs:
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
             User found 🥹 Assigning ticket ${{ steps.create.outputs.issue }} to ${{ steps.format_date.outputs.selected_user_name }}... ⛴️
-      
+
       - name: Inform user inexistence
         if: steps.user_list_from_search.outputs.selected_user_id == "null"
         uses: port-labs/port-github-action@v1
@@ -168,7 +168,7 @@ jobs:
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
             User not found 😭 Skipping assignment... ⛴️
-      
+
       - name: Assign ticket to selected user
         id: assign_ticket
         if: steps.user_list_from_search.outputs.selected_user_id != "null"
@@ -180,7 +180,6 @@ jobs:
           password: ${{ secrets.JIRA_API_TOKEN }}
           customHeaders: '{"Content-Type": "application/json"}'
           data: '{"accountId": "${{ steps.format_date.outputs.selected_user_id }}"}'
-
 
       - name: Inform ticket has been assigned
         if: steps.assign_ticket.outcome == 'success'
