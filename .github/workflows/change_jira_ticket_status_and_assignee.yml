@@ -30,11 +30,8 @@ jobs:
   change-jira-ticket-status-and-assignee:
     runs-on: ubuntu-latest
     outputs:
-      - id: selected_user_id
-        value: ${{ steps.user_list_from_search.outputs.selected_user_id }}
-
-      - id: selected_user_name
-        value: ${{ steps.user_list_from_search.outputs.selected_user_name }}
+      selected_user_id: ${{ steps.user_list_from_search.outputs.selected_user_id }}
+      selected_user_name: ${{ steps.user_list_from_search.outputs.selected_user_name }}
 
     steps:
       - name: Login
