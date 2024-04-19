@@ -139,8 +139,8 @@ jobs:
         id: user_list_from_search
         if: steps.search_for_assignee.outcome == 'success'
         run: |
-          selected_user_id=$(echo "${{ steps.servicenow_incident.outputs.response }}" | jq -r 'if length > 0 then .[0].accountId else "empty" end')
-          selected_user_name=$(echo "${{ steps.servicenow_incident.outputs.response }}" | jq -r 'if length > 0 then .[0].displayName else "empty" end')
+          selected_user_id=$(echo "${{ steps.search_for_assignee.outputs.response }}" | jq -r 'if length > 0 then .[0].accountId else "empty" end')
+          selected_user_name=$(echo "${{ steps.search_for_assignee.outputs.response }}" | jq -r 'if length > 0 then .[0].displayName else "empty" end')
           echo "selected_user_id=${selected_user_id}" >> $GITHUB_OUTPUT
           echo "selected_user_name=${selected_user_name}" >> $GITHUB_OUTPUT
 
