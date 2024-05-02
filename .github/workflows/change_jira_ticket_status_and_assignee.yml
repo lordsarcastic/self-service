@@ -52,6 +52,7 @@ jobs:
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
             Changing status of Jira issue... ⛴️
+            echo "${{ github.event.inputs.status }}"
 
       - name: Inform skipping of changing Jira ticket status
         id: inform_skip_ticket_status
