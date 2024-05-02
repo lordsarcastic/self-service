@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - "main"
-      - "releases/**"
-      - "master"
 
 jobs:
   ingest_codeowners:
