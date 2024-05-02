@@ -188,4 +188,4 @@ jobs:
           link: ${{ secrets.JIRA_BASE_URL }}/browse/${{ fromJson(inputs.port_payload).context.entity }}
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
-            Jira issue has been assigned to ${{ steps.format_date.outputs.selected_user_name }}! ✅
+            Jira issue has been assigned to ${{ steps.user_list_from_search.outputs.selected_user_name }}! ✅
