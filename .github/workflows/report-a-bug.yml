@@ -101,7 +101,7 @@ jobs:
           summary: Bug | ${{github.event.inputs.short_title}}
           fields: |-
             ${{ steps.user_list_from_search.outputs.selected_user_id == 'empty'
-              && '{}'' 
+              && '{}'
               || '{"assignee": {"id": "${{ steps.user_list_from_search.outputs.selected_user_id }}" }}'
             }}
           description: |
