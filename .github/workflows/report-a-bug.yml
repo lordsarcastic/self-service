@@ -103,7 +103,7 @@ jobs:
             ${{github.event.inputs.description}}
           fields: |-
             ${{ steps.user_list_from_search.outputs.selected_user_id != 'empty'
-              && format('{"assignee": {"id": "{0}" }}', steps.user_list_from_search.outputs.selected_user_id)
+              && format('{{"assignee": {{"id": "{0}" }}}}', steps.user_list_from_search.outputs.selected_user_id)
               || '{}'
             }}
 
