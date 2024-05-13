@@ -98,7 +98,7 @@ jobs:
         with:
           project: PORT
           issuetype: Bug
-          summary: Bug | ${{github.event.inputs.short_title}}
+          summary: ${{github.event.inputs.short_title}}
           description: |
             ${{github.event.inputs.description}}
           fields: |-
@@ -110,8 +110,8 @@ jobs:
       - name: Inform creation of Jira issue
         uses: port-labs/port-github-action@v1
         with:
-          clientId: ${{ secrets.PORT_AUTH_CLIENT_ID }}
-          clientSecret: ${{ secrets.PORT_AUTH_CLIENT_SECRET }}
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: PATCH_RUN
           link: https://getport.atlassian.net/browse/${{ steps.create.outputs.issue }}
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
