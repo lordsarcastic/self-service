@@ -41,7 +41,7 @@ jobs:
         id: search_for_assignee
         uses: fjogeleit/http-request-action@v1
         with:
-          url: "${{ secrets.JIRA_BASE_URL }}/rest/api/3/user/search?query=${{ github.event.inputs.assignee }}"
+          url: "${{ secrets.JIRA_BASE_URL }}/rest/api/3/user/search?query=${{ fromJson(inputs.port_payload).trigger.by.user.email }}"
           method: "GET"
           username: ${{ secrets.JIRA_USER_EMAIL }}
           password: ${{ secrets.JIRA_API_TOKEN }}
