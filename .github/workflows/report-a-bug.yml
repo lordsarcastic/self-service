@@ -116,4 +116,4 @@ jobs:
           link: https://getport.atlassian.net/browse/${{ steps.create.outputs.issue }}
           runId: ${{ fromJson(inputs.port_payload).context.runId }}
           logMessage: |
-            Jira issue with ID ${{ steps.create.outputs.issue }} created! ✅ 
+            Jira issue with ID ${{ steps.create.outputs.issue }} created! ✅
