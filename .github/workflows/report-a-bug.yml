@@ -29,67 +29,12 @@ jobs:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-      
-      - name: Inform searching of user in user list
-        uses: port-labs/port-github-action@v1
-        with:
-          clientId: ${{ secrets.PORT_CLIENT_ID }}
-          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
-          operation: PATCH_RUN
-          runId: ${{ inputs.run_id }}
-          logMessage: |
-            Searching for user in organization user list... ⛴️
-
-      - name: Search for assignee among user list
-        id: search_for_assignee
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: "${{ secrets.JIRA_BASE_URL }}/rest/api/3/user/search?query=${{ inputs.triggered_by }}"
-          method: "GET"
-          username: ${{ secrets.JIRA_USER_EMAIL }}
-          password: ${{ secrets.JIRA_API_TOKEN }}
-          customHeaders: '{"Content-Type": "application/json"}'
-      
-      - name: Install jq
-        run: sudo apt-get install jq
-        if: steps.search_for_assignee.outcome == 'success'
-
-      - name: Retrieve user list from search
-        id: user_list_from_search
-        if: steps.search_for_assignee.outcome == 'success'
-        run: |
-          selected_user_id=$(echo '${{ steps.search_for_assignee.outputs.response }}' | jq -r 'if length > 0 then .[0].accountId else "empty" end')
-          selected_user_name=$(echo '${{ steps.search_for_assignee.outputs.response }}' | jq -r 'if length > 0 then .[0].displayName else "empty" end')
-          echo "selected_user_id=${selected_user_id}" >> $GITHUB_OUTPUT
-          echo "selected_user_name=${selected_user_name}" >> $GITHUB_OUTPUT
-
-      - name: Inform user existence
-        if: steps.user_list_from_search.outputs.selected_user_id != 'empty'
-        uses: port-labs/port-github-action@v1
-        with:
-          clientId: ${{ secrets.PORT_CLIENT_ID }}
-          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
-          operation: PATCH_RUN
-          runId: ${{ inputs.run_id }}
-          logMessage: |
-            User found 🥹 Will assign Bug to ${{ steps.user_list_from_search.outputs.selected_user_name }}... ⛴️
-
-      - name: Inform user inexistence
-        if: steps.user_list_from_search.outputs.selected_user_id == 'empty'
-        uses: port-labs/port-github-action@v1
-        with:
-          clientId: ${{ secrets.PORT_CLIENT_ID }}
-          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
-          operation: PATCH_RUN
-          runId: ${{ inputs.run_id }}
-          logMessage: |
-            User not found 😭 Bug will be created without assignee ⛴️
 
       - name: Inform starting of jira issue creation
         uses: port-labs/port-github-action@v1
         with:
-          clientId: ${{ secrets.PORT_CLIENT_ID }}
-          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          clientId: ${{ secrets.PORT_AUTH_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_AUTH_CLIENT_SECRET }}
           operation: PATCH_RUN
           runId: ${{ inputs.run_id }}
           logMessage: |
@@ -101,22 +46,18 @@ jobs:
         with:
           project: PORT
           issuetype: Bug
-          summary: ${{github.event.inputs.short_title}}
+          summary: Bug | ${{ inputs.short_title }}
           description: |
-            ${{github.event.inputs.description}}
-          fields: |-
-            ${{ steps.user_list_from_search.outputs.selected_user_id != 'empty'
-              && format('{{"assignee": {{"id": "{0}" }}}}', steps.user_list_from_search.outputs.selected_user_id)
-              || '{}'
-            }}
+            ${{ inputs.description }}
 
       - name: Inform creation of Jira issue
         uses: port-labs/port-github-action@v1
         with:
-          clientId: ${{ secrets.PORT_CLIENT_ID }}
-          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          clientId: ${{ secrets.PORT_AUTH_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_AUTH_CLIENT_SECRET }}
           operation: PATCH_RUN
           link: https://getport.atlassian.net/browse/${{ steps.create.outputs.issue }}
           runId: ${{ inputs.run_id }}
           logMessage: |
-            Jira issue with ID ${{ steps.create.outputs.issue }} created! ✅
+            Jira issue created! ✅
+            The issue id is: ${{ steps.create.outputs.issue }}
