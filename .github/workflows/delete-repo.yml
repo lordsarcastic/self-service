@@ -9,7 +9,7 @@ on:
       delete_dependents:
         required: true
         type: boolean
-        default: false
+        default: true
       entity:
         required: true
         type: string
