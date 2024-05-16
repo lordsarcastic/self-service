@@ -1,0 +1,80 @@
+name: Delete Repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      org_name:
+        required: true
+        type: string
+      delete_dependents:
+        required: true
+        type: boolean
+        default: false
+      entity:
+        required: true
+        type: string
+      run_id:
+        required: true
+        type: string
+      blueprint:
+        required: true
+        type: string
+
+jobs:
+  delete-repo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Inform starting of deletion
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: PATCH_RUN
+          runId: ${{ inputs.run_id }}
+          logMessage: |
+            Deleting a github repository... ⛴️
+
+      - name: Delete Repository
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          REPO_NAME: ${{ ${{ inputs.entity }} }}
+        run: |
+          echo $GH_TOKEN
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X DELETE \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${{ inputs.org_name }}/$REPO_NAME")
+
+          echo "HTTP Status: $HTTP_STATUS"
+
+          # Check if HTTP_STATUS is 204 (No Content)
+          if [ $HTTP_STATUS -eq 204 ]; then
+            echo "Repository deleted successfully."
+            echo "delete_successful=true" >> $GITHUB_ENV
+          else
+            echo "Failed to delete repository. HTTP Status: $HTTP_STATUS"
+            echo "delete_successful=false" >> $GITHUB_ENV
+          fi
+
+      - name: Delete record in Port
+        if: ${{ env.delete_successful == 'true' }}
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: DELETE
+          delete_dependents: ${{ inputs.delete_dependents }}
+          identifier: ${{ inputs.entity }}
+          blueprint: ${{ inputs.blueprint }}
+      
+      - name: Inform completion of deletion
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: PATCH_RUN
+          runId: ${{ inputs.run_id }}
+          logMessage: |
+            GitHub repository deleted! ✅
