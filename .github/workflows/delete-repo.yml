@@ -38,7 +38,7 @@ jobs:
       - name: Delete Repository
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          REPO_NAME: ${{ ${{ inputs.entity }} }}
+          REPO_NAME: ${{ inputs.entity }}
         run: |
           echo $GH_TOKEN
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
