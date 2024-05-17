@@ -1,4 +1,4 @@
-name: Open Jira Issue with automatic label
+name: Open Jira issue with automatic label
 on:
   workflow_dispatch:
     inputs:
@@ -11,12 +11,24 @@ on:
       project:
         required: true
         type: string
-      port_payload:
+      run_id:
         required: true
-        description:
-          Port's payload, including details for who triggered the action and
-          general context (blueprint, run id, etc...)
         type: string
+      entity:
+        required: true
+        type: string
+    secrets:
+      JIRA_BASE_URL:
+        required: true
+      JIRA_USER_EMAIL:
+        required: true
+      JIRA_API_TOKEN:
+        required: true
+      PORT_CLIENT_ID:
+        required: true
+      PORT_CLIENT_SECRET:
+        required: true
+
 jobs:
   create-entity-in-port-and-update-run:
     runs-on: ubuntu-latest
@@ -34,7 +46,7 @@ jobs:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: PATCH_RUN
-          runId: ${{ fromJson(inputs.port_payload).context.runId }}
+          runId: ${{ inputs.run_id }}
           logMessage: |
             Creating a new Jira issue with automatic label.. ⛴️
 
@@ -42,10 +54,10 @@ jobs:
         id: create
         uses: atlassian/gajira-create@v3
         with:
-          project: ${{github.event.inputs.project}}
-          issuetype: ${{github.event.inputs.type}}
-          summary: ${{github.event.inputs.title}}
-          fields: '{"labels": ["port-${{ fromJson(inputs.port_payload).context.entity }}"]}'
+          project: ${{ inputs.project }}
+          issuetype: ${{ inputs.type }}
+          summary: ${{ inputs.title }}
+          fields: '{"labels": ["port-${{ inputs.entity }}"]}'
 
       - name: Inform creation of Jira issue
         uses: port-labs/port-github-action@v1
@@ -54,7 +66,7 @@ jobs:
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: PATCH_RUN
           link: ${{ secrets.JIRA_BASE_URL }}/browse/${{ steps.create.outputs.issue }}
-          runId: ${{ fromJson(inputs.port_payload).context.runId }}
+          runId: ${{ inputs.run_id }}
           logMessage: |
             Jira issue created! ✅
             The issue id is: ${{ steps.create.outputs.issue }}
