@@ -2,12 +2,14 @@ name: Trigger Datadog Incident
 on:
   workflow_dispatch:
     inputs:
-      customerImpactScope:
+      title:
         type: string
       customerImpacted:
         type: boolean
-      title:
+        required: true
+      customerImpactScope:
         type: string
+        description: Required if customer_impacted:"true". A summary of the impact customers experienced during the incident.
       notificationHandleName:
         type: string
       notificationHandleEmail:
