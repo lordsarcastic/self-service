@@ -5,9 +5,6 @@ on:
       tags:
         type: string
         required: true
-      run_id:
-        required: true
-        type: string
       port_context:
         required: true
         type: string
