@@ -43,7 +43,11 @@ jobs:
           project: ${{ inputs.project }}
           issuetype: ${{ inputs.type }}
           summary: ${{ inputs.title }}
-          fields: '{"labels": ["port-${{ fromJson(inputs.port_context).entity }}"]}'
+          fields: |
+            ${{ fromJson(inputs.port_context).entity != null
+              && format('{{ "labels": ["port-{0}"] }}', fromJson(inputs.port_context).entity)
+              || '{}'
+            }}
 
       - name: Inform creation of Jira issue
         uses: port-labs/port-github-action@v1
