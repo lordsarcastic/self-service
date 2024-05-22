@@ -12,10 +12,7 @@ on:
       short_title:
         required: true
         type: string
-      run_id:
-        required: true
-        type: string
-      triggered_by:
+      port_context:
         required: true
         type: string
 
@@ -36,7 +33,7 @@ jobs:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: PATCH_RUN
-          runId: ${{ inputs.run_id }}
+          runId: ${{ fromJson(inputs.port_context).run_id }}
           logMessage: |
             Searching for user in organization user list... ⛴️
 
@@ -44,7 +41,7 @@ jobs:
         id: search_for_reporter
         uses: fjogeleit/http-request-action@v1
         with:
-          url: "${{ secrets.JIRA_BASE_URL }}/rest/api/3/user/search?query=${{ inputs.triggered_by }}"
+          url: "${{ secrets.JIRA_BASE_URL }}/rest/api/3/user/search?query=${{ fromJson(inputs.port_context).triggered_by }}"
           method: "GET"
           username: ${{ secrets.JIRA_USER_EMAIL }}
           password: ${{ secrets.JIRA_API_TOKEN }}
@@ -70,7 +67,7 @@ jobs:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: PATCH_RUN
-          runId: ${{ inputs.run_id }}
+          runId: ${{ fromJson(inputs.port_context).run_id }}
           logMessage: |
             User found 🥹 Bug reporter will be ${{ steps.user_list_from_search.outputs.selected_user_name }}... ⛴️
 
@@ -81,7 +78,7 @@ jobs:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: PATCH_RUN
-          runId: ${{ inputs.run_id }}
+          runId: ${{ fromJson(inputs.port_context).run_id }}
           logMessage: |
             User not found 😭 Bug will be created with default reporter ⛴️
 
@@ -91,7 +88,7 @@ jobs:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: PATCH_RUN
-          runId: ${{ inputs.run_id }}
+          runId: ${{ fromJson(inputs.port_context).run_id }}
           logMessage: |
             Creating a new Jira issue.. ⛴️
 
@@ -117,6 +114,6 @@ jobs:
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: PATCH_RUN
           link: https://getport.atlassian.net/browse/${{ steps.create.outputs.issue }}
-          runId: ${{ inputs.run_id }}
+          runId: ${{ fromJson(inputs.port_context).run_id }}
           logMessage: |
             Jira issue with ID ${{ steps.create.outputs.issue }} created! ✅

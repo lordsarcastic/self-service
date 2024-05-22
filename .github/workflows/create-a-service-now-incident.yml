@@ -16,17 +16,6 @@ on:
         required: true
         description: "Port's payload, including details for who triggered the action and general context (blueprint, run id, etc...)"
         type: string
-    secrets:
-      SERVICENOW_USERNAME:
-        required: true
-      SERVICENOW_PASSWORD:
-        required: true
-      SERVICENOW_INSTANCE_URL:
-        required: true
-      PORT_CLIENT_ID:
-        required: true
-      PORT_CLIENT_SECRET:
-        required: true
 
 jobs:
   create-entity-in-port-and-update-run:
