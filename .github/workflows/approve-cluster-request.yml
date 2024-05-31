@@ -1,0 +1,195 @@
+name: Approve new cluster PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      port_payload:
+        required: true
+        description: "Port's payload"
+        type: string
+
+  workflow_call:
+    inputs:
+      pr-id:
+        required: true
+        description: "PR ID to approve"
+        type: string
+      control-plane:
+        type: string
+        required: true
+      cluster-name:
+        type: string
+        required: true
+        description: The cluster name to request
+      node-count:
+        type: string
+        required: true
+        description: Number of nodes for the cluster
+      node-size:
+        required: true
+        description: "Node size"
+        type: string
+      run-id:
+        type: string
+        required: false
+        default: ""
+
+jobs:
+  approve-cluster-request-call:
+    if: github.event.inputs.port_payload == '' || inputs.run-id != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: PATCH_RUN
+          runId: ${{ inputs.run-id }}
+          icon: GithubActions
+          logMessage: "Approving EKS cluster request: ${{ inputs.cluster-name }}"  
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Merge Pull Request
+        uses: juliangruber/merge-pull-request-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ inputs.pr-id }}
+          method: squash
+
+      - name: "Report new EKS cluster to Port"
+        if: ${{ always() }}
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          identifier: ${{ inputs.cluster-name }}
+          runId: ${{ inputs.run-id }}
+          title: ${{ inputs.cluster-name }}
+          blueprint: eks_cluster
+          properties: |
+            {
+              "node_size": "${{ inputs.node-size }}",
+              "node_count": "${{ inputs.node-count }}"
+            }
+          relations: |
+            {
+                "upbound_control_plane": "${{ inputs.control-plane }}"
+            }
+
+      - uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: PATCH_RUN
+          runId: ${{ inputs.run-id }}
+          icon: GithubActions
+          logMessage: "Approved EKS cluster request, and created new Port entity for the EKS cluster🚀 Applying Clusters to Upbound control plane..."
+
+  approve-cluster-request-port:
+    if: github.event.inputs.port_payload != '' && inputs.run-id == ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: PATCH_RUN
+          runId: ${{ fromJson(inputs.port_payload).context.runId }}
+          icon: GithubActions
+          logMessage: "Approving EKS cluster request: ${{ fromJson(inputs.port_payload).payload.entity.identifier }}"  
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Merge Pull Request
+        uses: juliangruber/merge-pull-request-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ fromJson(inputs.port_payload).payload.entity.properties.request_pr_number }}
+          method: squash
+  
+      - name: "Report new EKS cluster to Port"
+        if: ${{ always() }}
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          identifier: ${{ fromJson(inputs.port_payload).payload.entity.identifier }}
+          title: ${{ fromJson(inputs.port_payload).payload.entity.identifier }}
+          runId: ${{ fromJson(inputs.port_payload).context.runId }}
+          blueprint: eks_cluster
+          properties: | 
+            {
+              "node_size": "${{ fromJson(inputs.port_payload).payload.entity.properties.node_size }}",
+              "node_count": ${{ fromJson(inputs.port_payload).payload.entity.properties.node_count }}
+            }
+          relations: |
+            {
+                "upbound_control_plane": "${{ fromJson(inputs.port_payload).payload.entity.relations.upbound_control_plane }}"
+            }
+
+      - name: "Approve EKS cluster request"
+        if: ${{ always() }}
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          identifier: ${{ fromJson(inputs.port_payload).payload.entity.identifier }}
+          blueprint: eks_cluster_request
+          runId: ${{ fromJson(inputs.port_payload).context.runId }}
+          properties: |
+            {
+              "status": "Approved",
+              "eks_cluster": "${{ fromJson(inputs.port_payload).payload.entity.identifier }}"
+            }
+      - uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: PATCH_RUN
+          runId: ${{ fromJson(inputs.port_payload).context.runId }}
+          icon: GithubActions
+          logMessage: "Approved EKS cluster request, and created new Port entity for the EKS cluster🚀 Applying Clusters to Upbound control plane..."
+
+        
+  apply-cluster-changes:
+    uses: .apply-clusters.yaml
+    if: ${{ always() }}
+    secrets: inherit
+    needs:
+      - approve-cluster-request-call
+      - approve-cluster-request-port
+
+  update-port:
+    runs-on: ubuntu-latest
+    needs:
+      - apply-cluster-changes
+    if: ${{ always() }}
+    steps:
+      - name: Update port action run
+        if: ${{ inputs.run-id != '' }}
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: PATCH_RUN
+          runId: ${{ inputs.run-id }}
+          icon: GithubActions
+          summary: "Created cluster successfully"
+          logMessage: "Applied cluster to Upbound successfuly✅"
+          
+      - name: Update port action run
+        if: ${{ inputs.run-id == '' }}
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: PATCH_RUN
+          runId: ${{ fromJson(inputs.port_payload).context.runId }}
+          icon: GithubActions
+          status: "SUCCESS"
+          summary: "Created cluster successfully"
+          logMessage: "Applied cluster to Upbound successfuly✅"
