@@ -24,7 +24,7 @@ jobs:
             - name: Close PagerDuty Incident
               uses: fjogeleit/http-request-action@v1
               with:
-                  url: "https://api.pagerduty.com/incidents/${{ fromJson(inputs.port_context).pagerduty }}/resolve"
+                  url: "https://api.pagerduty.com/incidents/${{ fromJson(inputs.port_context).blueprint }}/resolve"
                   method: "PUT"
                   customHeaders: '{"Content-Type": "application/json", "Authorization": "Token ${{ secrets.PAGERDUTY_API_KEY }}"}'
                   data: '{"incident": {"type": "incident_reference", "status": "resolved"}}'
@@ -163,7 +163,7 @@ jobs:
                 slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
                 slack-channel: ${{ steps.slack_channel_id.outputs.slack_channel_id }}
                 slack-text: |
-                    PagerDuty incident (${{ fromJson(inputs.port_context).pagerduty }}) has been resolved.
+                    PagerDuty incident (${{ fromJson(inputs.port_context).blueprint }}) has been resolved.
                     GitHub issue (${{ fromJson(inputs.port_context).issue }}) has been closed.
 
             - name: Inform completion of Slack message sending
