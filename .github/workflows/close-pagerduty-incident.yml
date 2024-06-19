@@ -1,0 +1,178 @@
+on:
+    workflow_dispatch:
+        inputs:
+            port_context:
+                required: true
+                description: includes blueprint, run ID, and entity identifier from Port.
+                type: string
+                # runid, issue, pagerduty
+
+jobs:
+    close-pagerduty-incident:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Inform starting of PagerDuty incident closure
+              uses: port-labs/port-github-action@v1
+              with:
+                  clientId: ${{ secrets.PORT_CLIENT_ID }}
+                  clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+                  operation: PATCH_RUN
+                  runId: ${{ fromJson(inputs.port_context).run_id }}
+                  logMessage: |
+                      Closing a PagerDuty incident... 🚨
+
+            - name: Close PagerDuty Incident
+              uses: fjogeleit/http-request-action@v1
+              with:
+                  url: "https://api.pagerduty.com/incidents/${{ fromJson(inputs.port_context).pagerduty }}/resolve"
+                  method: "PUT"
+                  customHeaders: '{"Content-Type": "application/json", "Authorization": "Token ${{ secrets.PAGERDUTY_API_KEY }}"}'
+                  data: '{"incident": {"type": "incident_reference", "status": "resolved"}}'
+
+            - name: Inform completion of PagerDuty incident closure
+              uses: port-labs/port-github-action@v1
+              with:
+                  clientId: ${{ secrets.PORT_CLIENT_ID }}
+                  clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+                  operation: PATCH_RUN
+                  runId: ${{ fromJson(inputs.port_context).run_id }}
+                  logMessage: |
+                      PagerDuty incident closed successfully! 🚨
+
+    close-github-issue:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Inform starting of GitHub issue closure
+              uses: port-labs/port-github-action@v1
+              with:
+                  clientId: ${{ secrets.PORT_CLIENT_ID }}
+                  clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+                  operation: PATCH_RUN
+                  runId: ${{ fromJson(inputs.port_context).run_id }}
+                  logMessage: |
+                      Closing a GitHub issue... 🐙
+
+            - name: Close GitHub Issue
+              run: gh issue close ${{ fromJson(inputs.port_context).issue }}
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Inform completion of GitHub issue closure
+              uses: port-labs/port-github-action@v1
+              with:
+                  clientId: ${{ secrets.PORT_CLIENT_ID }}
+                  clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+                  operation: PATCH_RUN
+                  runId: ${{ fromJson(inputs.port_context).run_id }}
+                  logMessage: |
+                      GitHub issue closed successfully! 🐙
+
+    send-slack-message:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Search for Slack channel ID
+              id: slack_channel_id
+              run: |
+                #!/bin/bash
+
+                # Retrieve Slack API token from environment variable
+                SLACK_API_TOKEN="${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}"
+                CHANNEL_NAME="savteam"
+                
+                # Check if the Slack API token is set
+                if [ -z "$SLACK_API_TOKEN" ]; then
+                    echo "Error: SLACK_API_TOKEN environment variable is not set."
+                    exit 1
+                fi
+                
+                # Function to fetch channel list and extract the channel ID
+                fetch_channel_id() {
+                    local cursor=$1
+                    echo "Fetching channels list..." >&2
+                
+                    response=$(curl -s -X GET "https://slack.com/api/conversations.list" \
+                        -H "Authorization: Bearer ${SLACK_API_TOKEN}" \
+                        -H "Content-Type: application/json" \
+                        -G \
+                        --data-urlencode "limit=100" \
+                        --data-urlencode "types=public_channel,private_channel" \
+                        $(if [ -n "$cursor" ]; then echo "--data-urlencode cursor=$cursor"; fi))
+                
+                    if [ $? -ne 0 ]; then
+                        echo "Error: Failed to fetch channels list." >&2
+                        exit 1
+                    fi
+                
+                    echo "Channels list fetched successfully." >&2
+                
+                    # Extract channel with the given name and its ID
+                    echo "Searching for channel with name: $CHANNEL_NAME" >&2
+                    channel_id=$(echo "$response" | jq -r --arg CHANNEL_NAME "$CHANNEL_NAME" '.channels[] | select(.name == $CHANNEL_NAME) | .id')
+                    
+                    if [ -n "$channel_id" ]; then
+                        echo "Channel found: $CHANNEL_NAME, ID: $channel_id" >&2
+                        echo "$channel_id"
+                        echo "slack_channel_id=$channel_id" >> $GITHUB_OUTPUT
+                        return 0
+                    fi
+                
+                    # Extract the next cursor for pagination
+                    next_cursor=$(echo "$response" | jq -r '.response_metadata.next_cursor')
+                
+                    if [ -n "$next_cursor" ]; then
+                        echo "Next cursor found: $next_cursor. Fetching next page..." >&2
+                        fetch_channel_id "$next_cursor"
+                        return $?
+                    else
+                        echo "Channel not found." >&2
+                        echo "slack_channel_id=" >> $GITHUB_OUTPUT
+                        return 1
+                    fi
+                }
+                
+                # Initial call to fetch_channel_id without a cursor
+                fetch_channel_id ""
+            
+            - name: Inform Slack channel not found
+              if: steps.slack_channel_id.outputs.slack_channel_id == ''
+              uses: port-labs/port-github-action@v1
+              with:
+                clientId: ${{ secrets.PORT_CLIENT_ID }}
+                clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+                operation: PATCH_RUN
+                runId: ${{ fromJson(inputs.port_context).run_id }}
+                logMessage: |
+                    Slack channel not found. Please ensure the channel exists and the bot has access to it.
+
+            - name: Inform starting of Slack message sending
+              if: steps.slack_channel_id.outputs.slack_channel_id != ''
+              uses: port-labs/port-github-action@v1
+              with:
+                  clientId: ${{ secrets.PORT_CLIENT_ID }}
+                  clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+                  operation: PATCH_RUN
+                  runId: ${{ fromJson(inputs.port_context).run_id }}
+                  logMessage: |
+                      Sending a Slack message... 🚀
+
+            - name: Send Slack message
+              if: steps.slack_channel_id.outputs.slack_channel_id != ''
+              uses: archive/github-actions-slack@v2.9.0
+              id: slack_notification
+              with:
+                slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+                slack-channel: ${{ steps.slack_channel_id.outputs.slack_channel_id }}
+                slack-text: |
+                    PagerDuty incident (${{ fromJson(inputs.port_context).pagerduty }}) has been resolved.
+                    GitHub issue (${{ fromJson(inputs.port_context).issue }}) has been closed.
+
+            - name: Inform completion of Slack message sending
+              if: steps.slack_channel_id.outputs.slack_channel_id != ''
+              uses: port-labs/port-github-action@v1
+              with:
+                  clientId: ${{ secrets.PORT_CLIENT_ID }}
+                  clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+                  operation: PATCH_RUN
+                  runId: ${{ fromJson(inputs.port_context).run_id }}
+                  logMessage: |
+                      Slack message sent successfully! 🚀
