@@ -150,7 +150,7 @@ jobs:
           identifier: "${{ fromJson(steps.create_service_request.outputs.response).service.id }}" 
           title: "${{ fromJson(steps.create_service_request.outputs.response).service.summary }}"
           icon: pagerduty
-          blueprint: "pagerdutyService"
+          blueprint: "${{ fromJson(inputs.port_context).blueprint }}"
           properties: |-
             {
               "status": "${{ fromJson(steps.create_service_request.outputs.response).service.status }}",
