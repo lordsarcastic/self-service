@@ -83,7 +83,7 @@ jobs:
               }
           
       - name: Log Create Service Request Failure 
-        if: failure()
+        if: steps.create_service_request.outcome == 'failure'
         uses: port-labs/port-github-action@v1
         with:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
@@ -184,3 +184,14 @@ jobs:
           runId: ${{ fromJson(inputs.port_context).run_id }}
           logMessage: |
               Workflow completed successfully! 🚀
+
+      - name: Log workflow completion failure
+        if: failure()
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_context).run_id}}
+          logMessage: "Scaffolding repository workflow failed..."
