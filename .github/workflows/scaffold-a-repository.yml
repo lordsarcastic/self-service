@@ -10,7 +10,7 @@ on:
         type: string
         required: false
       readme:
-        type: string
+        type: boolean
         required: false
       visibility:
         type: string
@@ -38,7 +38,7 @@ jobs:
               Creating GitHub repository... 🚨
 
       - name: Create GitHub repository
-        run: gh repo create ${{ inputs.name }} --${{ inputs.visibility }} --description "${{ inputs.description }}" --add-readme="${{ inputs.readme }}"
+        run: gh repo create ${{ inputs.name }} --${{ inputs.visibility }} ${{ inputs.description && '--description' }} ${{ inputs.description && inputs.description }} $ ${{ inputs.readme && '--add-readme'}}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
