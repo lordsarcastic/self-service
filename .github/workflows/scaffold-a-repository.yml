@@ -195,7 +195,6 @@ jobs:
               "url": "${{ fromJson(steps.create_service_request.outputs.response).service.html_url }}",
               "oncall": ${{ env.user_emails }}
             }
-          relations: "${{ toJson(fromJson(inputs.port_context).relations) }}"
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           baseUrl: https://api.getport.io
