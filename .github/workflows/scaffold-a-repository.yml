@@ -74,7 +74,6 @@ jobs:
             {
               "readme": "${{ (inputs.readme && inputs.description != 'null') && inputs.description || '' }}"
             }
-          relations: "${{ toJson(fromJson(inputs.port_context).relations) }}"
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           baseUrl: https://api.getport.io
