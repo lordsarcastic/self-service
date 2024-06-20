@@ -38,7 +38,7 @@ jobs:
               Creating GitHub repository... 🚨
 
       - name: Create GitHub repository
-        run: gh repo create ${{ inputs.name }} --${{ inputs.visibility }} ${{ inputs.description && format('--description {0}', inputs.description) || ''}} ${{ inputs.readme && '--add-readme' || ''}}
+        run: gh repo create ${{ inputs.name }} --${{ inputs.visibility }} ${{ inputs.description != 'null' && format('--description {0}', inputs.description) || ''}} ${{ inputs.readme && '--add-readme' || ''}}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
