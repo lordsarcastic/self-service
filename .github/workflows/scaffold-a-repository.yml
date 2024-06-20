@@ -38,6 +38,7 @@ jobs:
               Creating GitHub repository... 🚨
 
       - name: Create GitHub repository
+        id: create_repo
         run: gh repo create ${{ inputs.name }} --${{ inputs.visibility }} ${{ inputs.description != 'null' && format('--description "{0}"', inputs.description) || ''}} ${{ inputs.readme && '--add-readme' || ''}}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -51,6 +52,24 @@ jobs:
           runId: ${{ fromJson(inputs.port_context).run_id }}
           logMessage: |
               GitHub repository created 🔥
+      
+      - name: Upsert GitHub repository
+        uses: port-labs/port-github-action@v1
+        with:
+          identifier: "${{ inputs.name }}"
+          title: "${{ inputs.name }}"
+          icon: github
+          blueprint: "${{ fromJson(inputs.port_context).blueprint }}"
+          properties: |-
+            {
+              "readme": ${{ inputs.readme }},
+            }
+          relations: "${{ toJson(fromJson(inputs.port_context).relations) }}"
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: UPSERT
+          runId: ${{fromJson(inputs.port_context).run_id}}
       
       - name: Inform starting of PagerDuty Service creation
         uses: port-labs/port-github-action@v1
@@ -150,7 +169,7 @@ jobs:
           identifier: "${{ fromJson(steps.create_service_request.outputs.response).service.id }}" 
           title: "${{ fromJson(steps.create_service_request.outputs.response).service.summary }}"
           icon: pagerduty
-          blueprint: "${{ fromJson(inputs.port_context).blueprint }}"
+          blueprint: "pagerdutyService"
           properties: |-
             {
               "status": "${{ fromJson(steps.create_service_request.outputs.response).service.status }}",
@@ -186,7 +205,7 @@ jobs:
               Workflow completed successfully! 🚀
 
       - name: Log workflow completion failure
-        if: failure()
+        if: steps.create_repo.outcome == 'failure' || steps.create_service_request.outcome == 'failure'
         uses: port-labs/port-github-action@v1
         with:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
