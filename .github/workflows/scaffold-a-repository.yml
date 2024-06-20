@@ -72,7 +72,7 @@ jobs:
           blueprint: "${{ fromJson(inputs.port_context).blueprint }}"
           properties: |-
             {
-              "readme": "${{ (inputs.readme && inputs.description != 'null') && inputs.description || '' }}",
+              "readme": "${{ (inputs.readme && inputs.description != 'null') && inputs.description || '' }}"
             }
           relations: "${{ toJson(fromJson(inputs.port_context).relations) }}"
           clientId: ${{ secrets.PORT_CLIENT_ID }}
