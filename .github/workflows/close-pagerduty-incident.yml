@@ -77,7 +77,7 @@ jobs:
 
                 # Retrieve Slack API token from environment variable
                 SLACK_API_TOKEN="${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}"
-                CHANNEL_NAME="savteam"
+                CHANNEL_NAME="incident-${{ fromJson(inputs.port_context).blueprint }}"
                 
                 # Check if the Slack API token is set
                 if [ -z "$SLACK_API_TOKEN" ]; then
